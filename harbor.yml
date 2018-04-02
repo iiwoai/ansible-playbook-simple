@@ -1,0 +1,41 @@
+---
+- hosts: harbor
+  gather_facts: false
+  remote_user: user
+  become: true
+  vars:
+    hostline: 
+      - 'ip hostname'
+      - 'ip hostname'
+  tasks:
+    - include: add_hosts.yml
+    - name: 安装基础软件 
+      yum:  
+        name: "{{ item }}"
+        state: present 
+      with_items:
+        - epel-release
+        - docker
+        - docker-compose
+    - name: docker国内镜像加速
+      copy: 
+        src: ./files/daemon.json 
+        dest: /etc/docker/daemon.json
+    - name: 重置配置文件
+      shell: 'systemctl daemon-reload'
+    - name: 开启docker 服务
+      service: 
+        name: docker
+        state: started
+        enabled: yes   
+    - name: 下载harbor到本地
+      unarchive:
+        src: "http://hostname/soft/k8s/harbor-online-installer-v1.4.0.tgz"
+        dest: /usr/local
+        remote_src: yes
+    - name: 修改配置文件
+      template:
+        src: ./files/harbor.cfg
+        dest: /usr/local/src/harbor/harbor.cfg
+    - name: 安装 harbor
+      shell : 'sh /usr/local/src/harbor/install.sh'
