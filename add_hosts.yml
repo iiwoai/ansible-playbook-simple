@@ -1,0 +1,6 @@
+- name: 增加ops host
+  lineinfile:
+    dest: /etc/hosts
+    line: "{{ item }}"
+  with_items:
+    - "{{ hostline }}"
